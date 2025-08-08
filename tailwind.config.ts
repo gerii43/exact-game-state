@@ -19,38 +19,58 @@ export default {
 		},
 		extend: {
 			colors: {
-				border: 'hsl(var(--border))',
-				input: 'hsl(var(--input))',
-				ring: 'hsl(var(--ring))',
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
-				primary: {
-					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
+				
+				section: {
+					header: 'hsl(var(--section-header))',
+					'header-foreground': 'hsl(var(--section-header-foreground))'
 				},
-				secondary: {
-					DEFAULT: 'hsl(var(--secondary))',
-					foreground: 'hsl(var(--secondary-foreground))'
+				
+				action: {
+					gol: 'hsl(var(--action-gol))',
+					'gol-contra': 'hsl(var(--action-gol-contra))',
+					'corn-favor': 'hsl(var(--action-corn-favor))',
+					'corn-contra': 'hsl(var(--action-corn-contra))',
+					'pnlti-favor': 'hsl(var(--action-pnlti-favor))',
+					'pnlti-contra': 'hsl(var(--action-pnlti-contra))',
+					anotaciones: 'hsl(var(--action-anotaciones))'
 				},
-				destructive: {
-					DEFAULT: 'hsl(var(--destructive))',
-					foreground: 'hsl(var(--destructive-foreground))'
+				
+				quick: {
+					ganado: 'hsl(var(--quick-ganado))',
+					puerta: 'hsl(var(--quick-puerta))',
+					recuper: 'hsl(var(--quick-recuper))',
+					perdido: 'hsl(var(--quick-perdido))',
+					fuera: 'hsl(var(--quick-fuera))',
+					'perdido-ball': 'hsl(var(--quick-perdido-ball))',
+					'falta-favor': 'hsl(var(--quick-falta-favor))',
+					'falta-contra': 'hsl(var(--quick-falta-contra))',
+					parada: 'hsl(var(--quick-parada))'
 				},
-				muted: {
-					DEFAULT: 'hsl(var(--muted))',
-					foreground: 'hsl(var(--muted-foreground))'
+				
+				timer: {
+					bg: 'hsl(var(--timer-bg))',
+					text: 'hsl(var(--timer-text))',
+					iniciar: 'hsl(var(--timer-iniciar))',
+					pausar: 'hsl(var(--timer-pausar))',
+					reiniciar: 'hsl(var(--timer-reiniciar))'
 				},
-				accent: {
-					DEFAULT: 'hsl(var(--accent))',
-					foreground: 'hsl(var(--accent-foreground))'
+				
+				team: {
+					cd: 'hsl(var(--team-cd))',
+					equipo: 'hsl(var(--team-equipo))'
 				},
-				popover: {
-					DEFAULT: 'hsl(var(--popover))',
-					foreground: 'hsl(var(--popover-foreground))'
+				
+				player: {
+					bg: 'hsl(var(--player-bg))',
+					border: 'hsl(var(--player-border))',
+					text: 'hsl(var(--player-text))'
 				},
-				card: {
-					DEFAULT: 'hsl(var(--card))',
-					foreground: 'hsl(var(--card-foreground))'
+				
+				parte: {
+					bg: 'hsl(var(--parte-bg))',
+					text: 'hsl(var(--parte-text))'
 				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
