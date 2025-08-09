@@ -1,0 +1,17 @@
+/* Global hover/active/focus tweaks to avoid grey-out on hover */
+
+/* Keep button color and just brighten slightly on hover */
+.button:not([data-variant='link']):hover {
+  filter: brightness(1.08);
+}
+
+/* Micro active animation */
+.button:active {
+  transform: scale(0.98);
+}
+
+/* Ensure visible focus ring */
+.button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px hsl(var(--ring));
+}

@@ -1,122 +1,222 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AccionesSection } from './soccer/AccionesSection';
 import { AccionesRapidasSection } from './soccer/AccionesRapidasSection';
-import { ParteSection } from './soccer/ParteSection';
-import { MarcadorSection } from './soccer/MarcadorSection';
+import { PartSelector } from './soccer/PartSelector';
+import { Scoreboard } from './soccer/Scoreboard';
 import { JugadoresSection } from './soccer/JugadoresSection';
-import { HistorialSection } from './soccer/HistorialSection';
-import { useToast } from '@/hooks/use-toast';
+import { HistoryList, GameEvent, TeamId, EventType } from './soccer/HistoryList';
+import { useToast, toast as globalToast } from '@/hooks/use-toast';
+import { useClock } from '@/hooks/useClock';
+import { GoalModal, GoalData, TeamSide } from './soccer/GoalModal';
+import { deleteEventById, loadEvents, postEvent, saveEvents, updateEvent } from '@/store/eventsStore';
+import { ToastAction } from '@/components/ui/toast';
 
-export interface GameState {
-  selectedPlayer: number | null;
-  selectedAction: string | null;
-  scoreCD: number;
-  scoreEquipo: number;
-  timer: string;
-  isRunning: boolean;
-  foulsCDCount: number;
-  foulsEquipoCount: number;
-  currentParte: string | null;
-  events: Array<{
-    id: string;
-    player: number;
-    action: string;
-    time: string;
-    parte: string;
-  }>;
-}
+const PART_KEY = 'current_part_v1';
 
 export const SoccerTracker = () => {
   const { toast } = useToast();
-  
-  const [gameState, setGameState] = useState<GameState>({
-    selectedPlayer: null,
-    selectedAction: null,
-    scoreCD: 0,
-    scoreEquipo: 2,
-    timer: "03:05",
-    isRunning: false,
-    foulsCDCount: 0,
-    foulsEquipoCount: 1, // One red dot shown in reference
-    currentParte: null,
-    events: []
-  });
+
+  // Selecteds
+  const [selectedPlayer, setSelectedPlayer] = useState<number | null>(null);
+  const [selectedAction, setSelectedAction] = useState<string | null>(null);
+
+  // Events and part persistence
+  const [events, setEvents] = useState<GameEvent[]>([]);
+  const [currentParte, setCurrentParte] = useState<string>(() => localStorage.getItem(PART_KEY) || '1 TIME');
+
+  // Timer
+  const { time, isRunning, start, pause, reset } = useClock();
+
+  // Goal modal
+  const [goalModalOpen, setGoalModalOpen] = useState(false);
+  const [goalTeamSide, setGoalTeamSide] = useState<TeamSide>('cd');
+  const [editingEvent, setEditingEvent] = useState<GameEvent | null>(null);
+
+  // Flash for foul limit
+  const [foulsFlash, setFoulsFlash] = useState<'cd' | 'equipo' | null>(null);
+
+  // Load events initially
+  useEffect(() => {
+    setEvents(loadEvents());
+  }, []);
+
+  // Persist events when changed
+  useEffect(() => {
+    saveEvents(events);
+  }, [events]);
+
+  // Derived metrics
+  const confirmed = useMemo(() => events.filter((e) => e.status === 'confirmed'), [events]);
+
+  const scoreCD = useMemo(() => confirmed.filter((e) => e.type === 'goal_for').length, [confirmed]);
+  const scoreEquipo = useMemo(() => confirmed.filter((e) => e.type === 'goal_against').length, [confirmed]);
+
+  const foulsCDCount = useMemo(
+    () => confirmed.filter((e) => (e.type === 'foul' || e.type === 'penalty') && e.teamId === 'cd' && e.part === currentParte).length,
+    [confirmed, currentParte]
+  );
+  const foulsEquipoCount = useMemo(
+    () => confirmed.filter((e) => (e.type === 'foul' || e.type === 'penalty') && e.teamId === 'equipo' && e.part === currentParte).length,
+    [confirmed, currentParte]
+  );
+
+  // Timer controls exposed to scoreboard
+  const handleTimerControl = (action: 'start' | 'pause' | 'reset') => {
+    if (action === 'start') start();
+    if (action === 'pause') pause();
+    if (action === 'reset') reset();
+  };
 
   const handlePlayerSelect = (playerNumber: number) => {
-    setGameState(prev => ({
-      ...prev,
-      selectedPlayer: prev.selectedPlayer === playerNumber ? null : playerNumber
-    }));
+    setSelectedPlayer((prev) => (prev === playerNumber ? null : playerNumber));
+  };
+
+  const openGoalForAction = (action: 'GOL' | 'GOL CONTRA') => {
+    if (!selectedPlayer) {
+      toast({ description: 'Selecciona un jugador antes de registrar el gol.' });
+      return;
+    }
+    setGoalTeamSide(action === 'GOL' ? 'cd' : 'equipo');
+    setGoalModalOpen(true);
+  };
+
+  const addQuickEvent = (type: EventType, teamId: TeamId, label?: string) => {
+    // Enforce foul limit per part (5)
+    if ((type === 'foul' || type === 'penalty')) {
+      const current = teamId === 'cd' ? foulsCDCount : foulsEquipoCount;
+      if (current >= 5) {
+        setFoulsFlash(teamId);
+        setTimeout(() => setFoulsFlash(null), 600);
+        toast({ description: 'Límite de faltas alcanzado (5).' });
+        return;
+      }
+    }
+
+    const ev: GameEvent = {
+      id: `ev_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      ts: Date.now(),
+      part: currentParte,
+      teamId,
+      playerId: selectedPlayer,
+      type,
+      meta: { label, gameTime: time },
+      status: 'confirmed',
+    };
+    setEvents((prev) => [...prev, ev]);
+    postEvent(ev);
+    toast({ description: `${label || type} registrado` });
+    setSelectedAction(null);
+    setSelectedPlayer(null);
   };
 
   const handleActionSelect = (action: string) => {
-    setGameState(prev => ({
-      ...prev,
-      selectedAction: prev.selectedAction === action ? null : action
-    }));
+    setSelectedAction((prev) => (prev === action ? null : action));
 
-    // If both player and action are selected, process the action
-    if (gameState.selectedPlayer && action) {
-      processAction(gameState.selectedPlayer, action);
+    if (action === 'GOL' || action === 'GOL CONTRA') {
+      openGoalForAction(action as 'GOL' | 'GOL CONTRA');
+      return;
     }
-  };
 
-  const processAction = (player: number, action: string) => {
-    const newEvent = {
-      id: Date.now().toString(),
-      player,
-      action,
-      time: gameState.timer,
-      parte: gameState.currentParte || "1 TIME"
+    if (action === 'FALTA FAVOR') return addQuickEvent('foul', 'equipo', 'Falta a favor');
+    if (action === 'FALTA CONTRA') return addQuickEvent('foul', 'cd', 'Falta en contra');
+    if (action === 'PNLTI FAVOR') return addQuickEvent('penalty', 'equipo', 'Penalti a favor');
+    if (action === 'PNLTI CONTRA') return addQuickEvent('penalty', 'cd', 'Penalti en contra');
+
+    // Optional: record other actions as notes
+    const ev: GameEvent = {
+      id: `ev_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      ts: Date.now(),
+      part: currentParte,
+      teamId: 'cd',
+      playerId: selectedPlayer,
+      type: 'note',
+      meta: { label: action, gameTime: time },
+      status: 'confirmed',
     };
-
-    let newState = { ...gameState };
-    
-    // Update score for goals
-    if (action === "GOL") {
-      newState.scoreCD += 1;
-    } else if (action === "GOL CONTRA") {
-      newState.scoreEquipo += 1;
-    }
-    
-    // Update fouls (cap at 5)
-    if (action === "FALTA FAVOR" || action === "PNLTI FAVOR") {
-      newState.foulsEquipoCount = Math.min(5, newState.foulsEquipoCount + 1);
-    } else if (action === "FALTA CONTRA" || action === "PNLTI CONTRA") {
-      newState.foulsCDCount = Math.min(5, newState.foulsCDCount + 1);
-    }
-
-    // Add event to history
-    newState.events = [...newState.events, newEvent];
-    
-    // Clear selections
-    newState.selectedPlayer = null;
-    newState.selectedAction = null;
-
-    setGameState(newState);
-
-    // Show confirmation toast
-    toast({
-      description: `PLAYER ${player} – ${action} registrado con éxito`,
-      duration: 3000,
-    });
-  };
-
-  const handleTimerControl = (action: 'start' | 'pause' | 'reset') => {
-    setGameState(prev => ({
-      ...prev,
-      isRunning: action === 'start',
-      timer: action === 'reset' ? "00:00" : prev.timer
-    }));
+    setEvents((prev) => [...prev, ev]);
+    postEvent(ev);
+    toast({ description: `${action} registrado` });
+    setSelectedAction(null);
+    setSelectedPlayer(null);
   };
 
   const handleParteSelect = (parte: string) => {
-    setGameState(prev => ({
-      ...prev,
-      currentParte: parte,
-      foulsCDCount: 0,
-      foulsEquipoCount: 0,
-    }));
+    setCurrentParte(parte);
+    localStorage.setItem(PART_KEY, parte);
+    // Foul dots reset automatically as they are derived by currentParte
+    toast({ description: `Parte cambiada a ${parte}. Faltas reiniciadas visualmente.` });
+  };
+
+  const saveGoal = async (data: GoalData, status: 'confirmed' | 'draft') => {
+    if (!selectedPlayer && !editingEvent) {
+      toast({ description: 'Selecciona un jugador (goleador).', });
+      return;
+    }
+
+    const base: GameEvent = editingEvent ?? {
+      id: `ev_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      ts: Date.now(),
+      part: currentParte,
+      teamId: goalTeamSide,
+      playerId: selectedPlayer!,
+      type: goalTeamSide === 'cd' ? 'goal_for' : 'goal_against',
+      meta: {},
+      status: 'confirmed',
+    };
+
+    const ev: GameEvent = {
+      ...base,
+      meta: { ...(base.meta || {}), zone: data.zone, origin: data.origin, assistPlayerId: data.assistPlayerId, gameTime: time },
+      status,
+    };
+
+    if (editingEvent) {
+      setEvents((prev) => prev.map((e) => (e.id === editingEvent.id ? ev : e)));
+      await updateEvent(ev);
+      setEditingEvent(null);
+      toast({ description: status === 'draft' ? 'Gol guardado como borrador' : 'Gol actualizado' });
+    } else {
+      setEvents((prev) => [...prev, ev]);
+      await postEvent(ev);
+      toast({ description: status === 'draft' ? 'Gol guardado para revisión' : 'Gol registrado' });
+    }
+
+    setGoalModalOpen(false);
+    setSelectedAction(null);
+    setSelectedPlayer(null);
+  };
+
+  const editEvent = (ev: GameEvent) => {
+    if (ev.type === 'goal_for' || ev.type === 'goal_against') {
+      setEditingEvent(ev);
+      setGoalTeamSide(ev.teamId);
+      setGoalModalOpen(true);
+      setSelectedPlayer(ev.playerId || null);
+    } else {
+      toast({ description: 'Edición disponible solo para goles en esta versión.' });
+    }
+  };
+
+  const deleteEvent = async (ev: GameEvent) => {
+    setEvents((prev) => prev.filter((e) => e.id !== ev.id));
+    await deleteEventById(ev.id);
+
+    const t = globalToast({
+      description: 'Evento eliminado',
+      action: (
+        <ToastAction altText="Deshacer" onClick={() => {
+          setEvents((prev) => [...prev, ev]);
+          postEvent(ev);
+        }}>Deshacer</ToastAction>
+      ),
+    });
+  };
+
+  const duplicateEvent = (ev: GameEvent) => {
+    const copy: GameEvent = { ...ev, id: `ev_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`, ts: Date.now() };
+    setEvents((prev) => [...prev, copy]);
+    postEvent(copy);
+    toast({ description: 'Evento duplicado' });
   };
 
   return (
@@ -124,42 +224,44 @@ export const SoccerTracker = () => {
       <div className="max-w-7xl mx-auto grid grid-cols-2 gap-8">
         {/* Left Column */}
         <div className="space-y-6">
-          <AccionesSection
-            selectedAction={gameState.selectedAction}
-            onActionSelect={handleActionSelect}
-          />
-          
-          <AccionesRapidasSection
-            selectedAction={gameState.selectedAction}
-            onActionSelect={handleActionSelect}
-          />
-          
-          <ParteSection
-            selectedParte={gameState.currentParte}
-            onParteSelect={handleParteSelect}
-          />
-          
-          <HistorialSection events={gameState.events} />
+          <AccionesSection selectedAction={selectedAction} onActionSelect={handleActionSelect} />
+          <AccionesRapidasSection selectedAction={selectedAction} onActionSelect={handleActionSelect} />
+          <PartSelector selected={currentParte} onChange={handleParteSelect} />
+          <HistoryList events={events} onEdit={editEvent} onDelete={deleteEvent} onDuplicate={duplicateEvent} />
         </div>
 
         {/* Right Column */}
         <div className="space-y-6">
-          <MarcadorSection
-            timer={gameState.timer}
-            isRunning={gameState.isRunning}
-            scoreCD={gameState.scoreCD}
-            scoreEquipo={gameState.scoreEquipo}
-            foulsCDCount={gameState.foulsCDCount}
-            foulsEquipoCount={gameState.foulsEquipoCount}
+          <Scoreboard
+            time={time}
+            isRunning={isRunning}
             onTimerControl={handleTimerControl}
+            scoreCD={scoreCD}
+            scoreEquipo={scoreEquipo}
+            foulsCDCount={foulsCDCount}
+            foulsEquipoCount={foulsEquipoCount}
+            foulsFlash={foulsFlash}
           />
-          
-          <JugadoresSection
-            selectedPlayer={gameState.selectedPlayer}
-            onPlayerSelect={handlePlayerSelect}
-          />
+          <JugadoresSection selectedPlayer={selectedPlayer} onPlayerSelect={setSelectedPlayer} />
         </div>
       </div>
+
+      <GoalModal
+        open={goalModalOpen}
+        teamSide={goalTeamSide}
+        players={Array.from({ length: 12 }, (_, i) => i + 1)}
+        selectedScorer={selectedPlayer}
+        initial={{
+          zone: (editingEvent?.meta?.zone as number) ?? null,
+          origin: (editingEvent?.meta?.origin as string) ?? null,
+          assistPlayerId: (editingEvent?.meta?.assistPlayerId as number | null) ?? null,
+        }}
+        onClose={() => {
+          setGoalModalOpen(false);
+          setEditingEvent(null);
+        }}
+        onSave={saveGoal}
+      />
     </div>
   );
 };
