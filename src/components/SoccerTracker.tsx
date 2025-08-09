@@ -79,11 +79,11 @@ export const SoccerTracker = () => {
       newState.scoreEquipo += 1;
     }
     
-    // Update fouls
-    if (action === "FALTA FAVOR") {
-      newState.foulsEquipoCount += 1;
-    } else if (action === "FALTA CONTRA") {
-      newState.foulsCDCount += 1;
+    // Update fouls (cap at 5)
+    if (action === "FALTA FAVOR" || action === "PNLTI FAVOR") {
+      newState.foulsEquipoCount = Math.min(5, newState.foulsEquipoCount + 1);
+    } else if (action === "FALTA CONTRA" || action === "PNLTI CONTRA") {
+      newState.foulsCDCount = Math.min(5, newState.foulsCDCount + 1);
     }
 
     // Add event to history
@@ -113,7 +113,9 @@ export const SoccerTracker = () => {
   const handleParteSelect = (parte: string) => {
     setGameState(prev => ({
       ...prev,
-      currentParte: prev.currentParte === parte ? null : parte
+      currentParte: parte,
+      foulsCDCount: 0,
+      foulsEquipoCount: 0,
     }));
   };
 

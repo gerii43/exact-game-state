@@ -13,8 +13,7 @@ export const HistorialSection = ({ events }: HistorialSectionProps) => {
 
   return (
     <div className="space-y-4">
-      {/* Section Header */}
-      <div className="bg-section-header px-4 py-2 text-center">
+      <div className="bg-section-header px-4 py-2 text-center rounded-md">
         <h2 className="text-section-header-foreground font-bold text-sm tracking-wider">
           HISTORIAL DE ACCIONES
         </h2>
@@ -32,7 +31,7 @@ export const HistorialSection = ({ events }: HistorialSectionProps) => {
             </tr>
           </thead>
           <tbody>
-            {events.reverse().map((event) => (
+            {[...events].reverse().map((event) => (
               <tr key={event.id} className="border-b border-gray-200">
                 <td className="px-3 py-2 text-timer-text">{event.time}</td>
                 <td className="px-3 py-2 text-timer-text">Player {event.player}</td>

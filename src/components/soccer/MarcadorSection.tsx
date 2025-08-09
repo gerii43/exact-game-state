@@ -22,8 +22,7 @@ export const MarcadorSection = ({
 }: MarcadorSectionProps) => {
   return (
     <div className="space-y-4">
-      {/* Section Header */}
-      <div className="bg-section-header px-4 py-2 text-center">
+      <div className="bg-section-header px-4 py-2 text-center rounded-md">
         <h2 className="text-section-header-foreground font-bold text-sm tracking-wider">
           MARCADOR
         </h2>
@@ -37,27 +36,18 @@ export const MarcadorSection = ({
             {timer}
           </div>
           
-          {/* Timer Controls */}
           <div className="flex justify-center gap-3">
             <Button
-              onClick={() => onTimerControl('start')}
-              className="bg-timer-iniciar text-white px-4 py-2 text-sm font-semibold rounded flex items-center gap-2"
+              onClick={() => onTimerControl(isRunning ? 'pause' : 'start')}
+              className="bg-timer-iniciar text-white px-4 py-2 text-sm font-semibold rounded flex items-center gap-2 hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-primary active:scale-95 transition-transform duration-150"
             >
-              <Play size={16} />
-              Iniciar
+              {isRunning ? <Pause size={16} /> : <Play size={16} />}
+              {isRunning ? 'Pausar' : timer !== '00:00' ? 'Reanudar' : 'Iniciar'}
             </Button>
-            
-            <Button
-              onClick={() => onTimerControl('pause')}
-              className="bg-timer-pausar text-white px-4 py-2 text-sm font-semibold rounded flex items-center gap-2"
-            >
-              <Pause size={16} />
-              Pausar
-            </Button>
-            
+
             <Button
               onClick={() => onTimerControl('reset')}
-              className="bg-transparent border-2 border-timer-text text-timer-text px-4 py-2 text-sm font-semibold rounded flex items-center gap-2 hover:bg-timer-text hover:text-timer-bg transition-colors"
+              className="bg-transparent border-2 border-timer-text text-timer-text px-4 py-2 text-sm font-semibold rounded flex items-center gap-2 hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-primary active:scale-95 transition-transform duration-150"
             >
               <RotateCcw size={16} />
               Reiniciar

@@ -12,9 +12,9 @@ All colors MUST be HSL.
     --background: 213 28% 8%;
     --foreground: 0 0% 100%;
 
-    /* Section headers - brown */
-    --section-header: 32 32% 37%;
-    --section-header-foreground: 0 0% 100%;
+    /* Section headers - title color */
+    --section-header: 43 100% 63%;
+    --section-header-foreground: 0 0% 0%;
 
     /* Action buttons */
     --action-gol: 140 80% 55%;
@@ -37,8 +37,8 @@ All colors MUST be HSL.
     --quick-parada: 220 13% 60%;
 
     /* Timer colors */
-    --timer-bg: 0 0% 100%;
-    --timer-text: 220 13% 18%;
+    --timer-bg: 220 13% 12%;
+    --timer-text: 0 0% 100%;
     --timer-iniciar: 140 80% 55%;
     --timer-pausar: 0 70% 60%;
     --timer-reiniciar: 0 0% 100%;
@@ -139,7 +139,7 @@ All colors MUST be HSL.
 
 @layer base {
   * {
-    @apply border-border;
+    border-color: hsl(var(--border));
   }
 
   body {

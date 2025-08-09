@@ -10,8 +10,7 @@ export const JugadoresSection = ({ selectedPlayer, onPlayerSelect }: JugadoresSe
 
   return (
     <div className="space-y-4">
-      {/* Section Header */}
-      <div className="bg-section-header px-4 py-2 text-center">
+      <div className="bg-section-header px-4 py-2 text-center rounded-md">
         <h2 className="text-section-header-foreground font-bold text-sm tracking-wider">
           JUGADORES
         </h2>
@@ -30,7 +29,7 @@ export const JugadoresSection = ({ selectedPlayer, onPlayerSelect }: JugadoresSe
                 bg-player-bg text-player-text border-2 border-player-border
                 w-full h-20 rounded-lg
                 shadow-[0px_4px_6px_rgba(0,0,0,0.25)]
-                hover:opacity-90 transition-all duration-200
+                hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-primary active:scale-95 transition-transform duration-150
                 flex flex-col items-center justify-center
                 ${isSelected ? 'shadow-[inset_0px_2px_4px_rgba(0,0,0,0.3)] bg-player-border' : ''}
                 relative

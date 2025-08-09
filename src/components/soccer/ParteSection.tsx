@@ -15,8 +15,7 @@ export const ParteSection = ({ selectedParte, onParteSelect }: ParteSectionProps
 
   return (
     <div className="space-y-4">
-      {/* Section Header */}
-      <div className="bg-section-header px-4 py-2 text-center">
+      <div className="bg-section-header px-4 py-2 text-center rounded-md">
         <h2 className="text-section-header-foreground font-bold text-sm tracking-wider">
           PARTE
         </h2>
@@ -35,7 +34,7 @@ export const ParteSection = ({ selectedParte, onParteSelect }: ParteSectionProps
                 bg-parte-bg text-parte-text font-semibold text-sm h-12 w-full
                 flex items-center justify-center rounded-md
                 shadow-[0px_4px_6px_rgba(0,0,0,0.25)]
-                hover:opacity-90 transition-all duration-200
+                hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-primary active:scale-95 transition-transform duration-150
                 ${isSelected ? 'shadow-[inset_0px_2px_4px_rgba(0,0,0,0.3)]' : ''}
               `}
             >

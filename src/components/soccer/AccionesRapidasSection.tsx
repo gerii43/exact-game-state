@@ -17,15 +17,14 @@ export const AccionesRapidasSection = ({ selectedAction, onActionSelect }: Accio
   ];
 
   const rectangularActions = [
-    { id: 'FALTA_FAVOR', label: 'FALTA FAVOR', color: 'bg-quick-falta-favor', icon: Users },
-    { id: 'FALTA_CONTRA', label: 'FALTA CONTRA', color: 'bg-quick-falta-contra', icon: UserX },
+    { id: 'FALTA FAVOR', label: 'FALTA FAVOR', color: 'bg-quick-falta-favor', icon: Users },
+    { id: 'FALTA CONTRA', label: 'FALTA CONTRA', color: 'bg-quick-falta-contra', icon: UserX },
     { id: 'PARADA', label: 'PARADA', color: 'bg-quick-parada', icon: Hand },
   ];
 
   return (
     <div className="space-y-4">
-      {/* Section Header */}
-      <div className="bg-section-header px-4 py-2 text-center">
+      <div className="bg-section-header px-4 py-2 text-center rounded-md">
         <h2 className="text-section-header-foreground font-bold text-sm tracking-wider">
           ACCIONES RÁPIDAS
         </h2>
@@ -45,7 +44,7 @@ export const AccionesRapidasSection = ({ selectedAction, onActionSelect }: Accio
                 ${action.color} text-white font-bold text-xs h-20 w-full
                 flex flex-col items-center justify-center gap-1 rounded-lg
                 shadow-[0px_4px_6px_rgba(0,0,0,0.25)]
-                hover:opacity-90 transition-all duration-200
+                hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-primary active:scale-95 transition-transform duration-150
                 ${isSelected ? 'shadow-[inset_0px_2px_4px_rgba(0,0,0,0.3)]' : ''}
                 clip-path-hexagon
               `}
@@ -74,7 +73,7 @@ export const AccionesRapidasSection = ({ selectedAction, onActionSelect }: Accio
                 ${action.color} text-white font-semibold text-xs h-12 w-full
                 flex items-center justify-center gap-2 rounded-md
                 shadow-[0px_4px_6px_rgba(0,0,0,0.25)]
-                hover:opacity-90 transition-all duration-200
+                hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-primary active:scale-95 transition-transform duration-150
                 ${isSelected ? 'shadow-[inset_0px_2px_4px_rgba(0,0,0,0.3)]' : ''}
               `}
             >
